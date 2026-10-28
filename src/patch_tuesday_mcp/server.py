@@ -16,6 +16,12 @@ from .middleware.rate_limit import RateLimitMiddleware  # noqa: E402
 from .tools.prompts import monthly_triage  # noqa: E402
 from .tools.search import msrc_search  # noqa: E402
 
+TOOL_DESCRIPTION = (
+    "Search Microsoft Patch Tuesday security updates. Supports keyword, CVE, "
+    "KB, month, product, severity, exploitation, KEV/EPSS, and historical-range "
+    "filters. Returns JSON with optional markdown/csv triage output."
+)
+
 
 def _env_flag(name: str, default: bool) -> bool:
     """Parse a boolean environment variable (accepts 1/true/yes/on)."""
@@ -86,6 +92,7 @@ def _trusted_proxies() -> frozenset[str]:
     raw = os.getenv("MCP_TRUSTED_PROXIES", "").strip()
     return frozenset(p.strip() for p in raw.split(",") if p.strip())
 
+
 # Create the MCP server
 mcp = FastMCP(
     "Patch Tuesday MCP",
@@ -132,10 +139,10 @@ mcp = FastMCP(
 
 # Register tools. Annotations let clients auto-approve: the tool only reads
 # public data from external APIs and is safe to retry.
-_tool_kwargs: dict = {}
+_tool_kwargs: dict = {"description": TOOL_DESCRIPTION}
 if deprecation.is_active():
     _tool_kwargs["description"] = (
-        (msrc_search.__doc__ or "").strip() + "\n\n" + deprecation.tool_description_suffix()
+        TOOL_DESCRIPTION + " " + deprecation.tool_description_suffix()
     )
 
 mcp.tool(
